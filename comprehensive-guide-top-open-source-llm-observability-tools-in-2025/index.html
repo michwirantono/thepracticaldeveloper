@@ -2,119 +2,134 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Top Open‑Source LLM Observability Tools in 2025</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My RAG bot thinks Python is a snake</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 0.5em;
+    }
+    h2 {
+      font-size: 1.5em;
+      margin-top: 2em;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 10px;
+      overflow-x: auto;
+    }
+    code {
+      font-family: monospace;
+    }
+  </style>
 </head>
 <body>
   <article>
     <header>
-      <h1>Top Open‑Source LLM Observability Tools in 2025</h1>
-      <p><strong>Originally published by The Practical Developer on Jun 20 2025</strong></p>
+      <h1>My RAG bot thinks Python is a snake</h1>
+      <p><strong>Originally published on <a href="https://dev.to/0xt12s/my-rag-bot-thinks-python-is-a-snake-24on" target="_blank" rel="noopener noreferrer">dev.to</a> by 0xt12s on June 19, 2025</strong></p>
     </header>
     <section>
-      <p><strong>TL;DR</strong></p>
+      <p>Remember yesterday when I fixed my hallucination problem? Woke up to this gem:</p>
+      <blockquote>
+        <p><em>“Python decorators work like a python snake constricting its prey.”</em></p>
+      </blockquote>
+      <p>My senior engineer just stared at me.</p>
+      <p>Apparently fixing general hallucinations wasn’t enough. Now my bot was creatively misinterpreting every technical term it could find. Kafka became literary analysis. Circuit breakers became electrical safety lessons. Had to fix this before the whole engineering team revolted.</p>
+    </section>
+    <section>
+      <h2>Quick answers for the desperate</h2>
+      <dl>
+        <dt><strong>Q: How can I detect when my LangChain RAG pipeline hallucinates technical terminology?</strong></dt>
+        <dd>Pattern matching for danger words works. If your bot explains “Python” with “snake” or “Kafka” with “author”, you've got terminology hallucination. Takes ~80 ms to check.</dd>
+        <dt><strong>Q: What's the most effective way to prevent domain terminology confusion in production RAG systems?</strong></dt>
+        <dd>Inject correct definitions before the LLM sees anything. Pre-populate context with your glossary. Stopped 95% of our terminology disasters.</dd>
+        <dt><strong>Q: Should I use pre-filtering or post-processing for terminology validation?</strong></dt>
+        <dd>Both. Pre-filter removes obviously wrong contexts (Python + reptile docs). Post-process catches creative interpretations. Belt and suspenders.</dd>
+        <dt><strong>Q: How do I handle ambiguous technical terms in my RAG pipeline?</strong></dt>
+        <dd>Force disambiguation in your prompts. Explicitly state “Python (programming language, NOT the snake)”. Sounds dumb, works great.</dd>
+      </dl>
+    </section>
+    <section>
+      <h2>The morning logs of shame</h2>
+      <pre><code>user: "explain our circuit breaker pattern"
+bot: "circuit breakers are electrical safety devices that stop current flow..."
+user: "what's kafka in our stack?"
+bot: "kafka, named after franz kafka, handles messages with existential reliability..."
+</code></pre>
+      <p>We use Hystrix, not electrical circuits. And that Kafka explanation? Our CTO called it "poetic but useless."</p>
+    </section>
+    <section>
+      <h2>Why yesterday's fix missed this</h2>
+      <p>My pattern detection caught lies about features. But terminology? Different beast:</p>
       <ul>
-        <li>Curated list of open-source LLM observability tools in 2025</li>
-        <li>Includes install guides, core features, integration notes</li>
-        <li>Tools covered: Traceloop, Langfuse, Helicone, Lunary, Phoenix (Arize AI), TruLens, Portkey, PostHog, Keywords AI, Langsmith, Opik, OpenLIT</li>
+        <li>LLMs know multiple meanings (Python = snake AND language)</li>
+        <li>Retrieval gets partial matches</li>
+        <li>Bot fills gaps with general knowledge</li>
       </ul>
     </section>
     <section>
-      <h2>Why LLM Observability Matters</h2>
-      <ul>
-        <li>Trace tokens/prompts across microservices</li>
-        <li>Monitor cost & latency by endpoint/model version</li>
-        <li>Detect errors, timeouts, and hallucinations</li>
-        <li>Correlate embeddings, retrieval, and outputs in RAG flows</li>
-      </ul>
+      <h2>The 20-minute panic fix</h2>
+      <pre><code>class TerminologyValidator:
+    def __init__(self):
+        self.danger_terms = {
+            "python": ["snake", "reptile", "constrictor"],
+            "java": ["coffee", "island", "indonesian"],
+            "rust": ["corrosion", "oxidation", "metal"],
+            "kafka": ["franz", "author", "metamorphosis"]
+        }
+    def check_response(self, query, response):
+        disasters = []
+        ...
+        return disasters
+</code></pre>
     </section>
     <section>
-      <h2>1. Traceloop (OpenLLMetry)</h2>
-      <p>An OpenTelemetry‑compliant SDK for tracing LLM apps.</p>
-      <pre><code>pip install traceloop-sdk</code></pre>
-      <pre><code>from traceloop.sdk import Traceloop
-Traceloop.init(app_name="your_app_name", disable_batch=True)</code></pre>
-      <ul>
-        <li>Span‑based telemetry compatible with Jaeger/Zipkin/OTLP</li>
-        <li>Error, retry, output‑truncate semantic tags</li>
-        <li>Integrates with LangChain, LlamaIndex, Haystack, OpenAI SDKs</li>
-      </ul>
+      <h2>Definition injection that actually works</h2>
+      <pre><code>SAFE_DEFINITIONS = {
+    "python": "high-level programming language",
+    "circuit breaker": "resilience pattern preventing cascading failures",
+    "kafka": "distributed event streaming platform"
+}
+def inject_glossary(query, retrieved_docs):
+    ...
+    glossary_doc = Document(...)
+    retrieved_docs.insert(0, glossary_doc)
+    return retrieved_docs
+</code></pre>
     </section>
     <section>
-      <h2>2. Langfuse</h2>
-      <p>Modular observability & structured logging for LLM chains.</p>
-      <pre><code>pip install langfuse</code></pre>
-      <pre><code>from langfuse import Langfuse
-Langfuse.init(api_key="YOUR_API_KEY", project="my_project")</code></pre>
-      <ul>
-        <li>Logs prompts, completions, chain steps</li>
-        <li>Integrates with Pinecone, Weaviate, FAISS</li>
-        <li>Web UI dashboards for flow & metrics</li>
-        <li>Use decorator or context‑manager tracing</li>
-      </ul>
+      <h2>The prompt that saved my job</h2>
+      <pre><code>TERMINOLOGY_PROMPT = """
+You are a technical assistant.
+CRITICAL: For these terms, ONLY use technical meanings:
+- Python (programming language, NEVER the snake)
+- Java (programming language, NEVER coffee)
+- Kafka (streaming platform, NEVER the author)
+Context: {context}
+Question: {question}
+Answer using technical definitions only:"""
+</code></pre>
     </section>
     <section>
-      <h2>3. Helicone</h2>
-      <p>Lightweight proxy for API‑level LLM visibility.</p>
+      <h2>Damage report</h2>
       <ul>
-        <li>Logs requests/responses, latency, cost, tokens</li>
-        <li>Prompt experimentation UI</li>
-        <li>Caching layer + rate limiting</li>
-        <li>SDKs for Python/JS, LangChain, multiple LLM providers :contentReference[oaicite:1]{index=1}</li>
+        <li>Morning: 47 terminology disasters</li>
+        <li>After fix: 2 (both edge cases)</li>
+        <li>Response time: +80 ms (worth it)</li>
+        <li>Engineer trust: restored</li>
       </ul>
-    </section>
-    <section>
-      <h2>4. Phoenix (Arize AI)</h2>
-      <p>Open-source AI observability built on OpenTelemetry.</p>
-      <ul>
-        <li>Tracing, evaluation, prompt & variable management :contentReference[oaicite:2]{index=2}</li>
-        <li>Integrates with LlamaIndex, LangChain, providers like OpenAI</li>
-        <li>Dataset creation, error clustering, benchmarking</li>
-      </ul>
-    </section>
-    <section>
-      <h2>5. OpenLLMetry / Traceloop</h2>
-      <p>End‑to‑end LLM telemetry via OpenTelemetry.</p>
-      <ul>
-        <li>Instrument LLM providers, vector DBs, frameworks :contentReference[oaicite:3]{index=3}</li>
-        <li>Integrates with Datadog, Honeycomb, Grafana, OTLP stack</li>
-      </ul>
-    </section>
-    <section>
-      <h2>6. PostHog</h2>
-      <p>Full product + LLM observability in one.</p>
-      <ul>
-        <li>Captures LLM generations, metrics dashboard & analytics :contentReference[oaicite:4]{index=4}</li>
-        <li>Free hosted version with 1 million events/month</li>
-        <li>Great for product + usage insights</li>
-      </ul>
-    </section>
-    <section>
-      <h2>7. Opik</h2>
-      <p>LLM evaluation & monitoring from Comet.</p>
-      <ul>
-        <li>Tracing, annotations, playground, evaluation :contentReference[oaicite:5]{index=5}</li>
-        <li>Free plan: 25k spans/month, unlimited users</li>
-      </ul>
-    </section>
-    <section>
-      <h2>8. Lunary</h2>
-      <p>Toolkit for chatbot observability.</p>
-      <ul>
-        <li>Chat tracking, analytics, prompt mgmt, PII masking :contentReference[oaicite:6]{index=6}</li>
-        <li>Free tier: 10k events/month</li>
-      </ul>
-    </section>
-    <section>
-      <h2>Other platforms</h2>
-      <ul>
-        <li><strong>Langsmith</strong> – LangChain‑native tracing, eval, prompt/version control :contentReference[oaicite:7]{index=7}</li>
-        <li><strong>TruLens, Portkey, Keywords AI</strong> – Additional niche tools in the space</li>
-        <li><strong>OpenLIT</strong> – Telemetry‑native tool built on OpenTelemetry & GPU monitoring :contentReference[oaicite:8]{index=8}</li>
-      </ul>
+      <p>Tomorrow: handling when the bot explains "git" as British slang. Because apparently that’s also a thing.</p>
     </section>
     <footer>
-      <p><em>— The Practical Developer</em></p>
+      <p><em>— 0xt12s</em></p>
     </footer>
   </article>
 </body>
