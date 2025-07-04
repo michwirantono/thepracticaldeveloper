@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detect Hallucinations in LangChain RAG Pipelines</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 0.4em;
+    }
+    h2 {
+      font-size: 1.5em;
+      margin-top: 1.8em;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 10px;
+      overflow-x: auto;
+    }
+    code {
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <article>
+    <header>
+      <h1>Detect hallucinations in LangChain RAG pipelines</h1>
+      <p><strong>Originally published on <a href="https://dev.to/0xt12s/detect-hallucinations-in-langchain-rag-pipelines-1hkn" target="_blank" rel="noopener noreferrer">dev.to</a> by 0xt12s on June 19, 2025</strong></p>
+    </header>
+    <section>
+      <p>Okay so you're building a RAG pipeline with LangChain and your AI keeps making stuff up. Been there. Here's what actually works.</p>
+    </section>
+    <section>
+      <h2>The problem: your bot sounds smart but lies</h2>
+      <p>My customer support bot was telling people we had 24/7 support when we only work 9‑5. It claimed we had “automatic refund processing” when everything's manual. Subtle lies that sound totally reasonable.</p>
+    </section>
+    <section>
+      <h2>Why it happens</h2>
+      <ol>
+        <li>Retrieves somewhat relevant docs</li>
+        <li>LLM fills in gaps with "helpful" details</li>
+        <li>You get 70% truth, 30% fiction</li>
+      </ol>
+    </section>
+    <section>
+      <h2>Detection method 1: see what's happening</h2>
+      <pre><code>from traceloop.sdk import Traceloop
+Traceloop.init(app_name="my_rag_pipeline")</code></pre>
+      <p>Use OpenTelemetry traces to inspect where the LLM is adding unsupported information.</p>
+    </section>
+    <section>
+      <h2>Detection method 2: LLM checking (~75% accurate)</h2>
+      <pre><code>def detect_hallucination(context, response):
+    prompt = f"""
+    Context: {context}
+    Response: {response}
+    Does the response contain information not in the context? YES/NO only.
+    """
+    result = llm.invoke(prompt)
+    return "yes" in result.lower()</code></pre>
+    </section>
+    <section>
+      <h2>Detection method 3: pattern matching</h2>
+      <pre><code>suspicious_patterns = [
+    r'\d+\s*hours?',    # "48 hours"
+    r'24/?7',           # "24/7 support"
+    r'automatically',   # "automatically processed"
+    r'real-time',       # usually a lie
+]</code></pre>
+    </section>
+    <section>
+      <h2>The fix: better prompts</h2>
+      <pre><code>ANTI_HALLUCINATION_PROMPT = """
+Use ONLY information in the context.
+Do not add details not explicitly mentioned.
+If information isn't available, say "I don't have that information."
+Context: {context}
+Question: {question}
+"""</code></pre>
+    </section>
+    <section>
+      <h2>Production setup that works</h2>
+      <pre><code>class ProductionRAG:
+    def __init__(self):
+        self.llm = OpenAI(temperature=0)
+        self.prompt = ANTI_HALLUCINATION_PROMPT
+    def query(self, question):
+        result = self.qa_chain({"question": question})
+        if detect_hallucination(context, result['answer']):
+            strict_q = f"{question}\n Only use exact information."
+            result = self.qa_chain({"question": strict_q})
+        return result['answer']</code></pre>
+    </section>
+    <section>
+      <h2>Results</h2>
+      <p>Before: 30% of responses had hallucinations<br />
+         After: &lt;5% hallucination rate<br />
+         Cost: ~30% more for checking, worth it</p>
+    </section>
+    <section>
+      <h2>Quick wins</h2>
+      <ul>
+        <li>Add OpenTelemetry (2 lines of code)</li>
+        <li>Use explicit anti-hallucination prompts</li>
+        <li>Implement basic pattern detection</li>
+        <li>Set temperature to 0</li>
+        <li>Track what gets flagged</li>
+      </ul>
+    </section>
+    <footer>
+      <p><em>— 0xt12s</em></p>
+    </footer>
+  </article>
+</body>
+</html>
