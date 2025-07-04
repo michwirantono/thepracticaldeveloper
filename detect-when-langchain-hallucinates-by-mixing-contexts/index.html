@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detect When LangChain Hallucinates by Mixing Contexts</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1>Detect When LangChain Hallucinates by Mixing Contexts</h1>
+      <p><strong>Originally published on <a href="https://dev.to/promptdebugger/detect-when-langchain-hallucinates-by-mixing-contexts-29ae" target="_blank" rel="noopener noreferrer">dev.to</a> by PromptDebugger</strong></p>
+    </header>
+    <section>
+      <p>One of the most annoying bugs with LangChain is when you give it multiple documents in the context and it mixes information from multiple sources and returns a hallucinated answer that appears correct but isn’t.</p>
+      <p>Here’s an example of what this looks like in practice:</p>
+      <pre><code>User: Who is the CEO of OpenAI?
+LangChain: According to the documents provided, Elon Musk is the CEO of OpenAI.
+But if you look at the context, one document says:
+“OpenAI was co-founded by Elon Musk in 2015…”
+Another document says:
+“Sam Altman is the CEO of OpenAI.”
+LangChain incorrectly mixed the documents and hallucinated that Elon Musk is the CEO.
+</code></pre>
+      <p>This is a subtle bug and often hard to detect unless you read the source documents carefully.</p>
+    </section>
+    <section>
+      <h2>How to detect it automatically</h2>
+      <p>We’ve added a new feature in <a href="https://promptdebugger.com" target="_blank" rel="noopener noreferrer">PromptDebugger</a> that automatically detects this kind of hallucination.</p>
+      <p>It’s based on a simple insight: if the answer spans multiple documents, it might be hallucinated.</p>
+      <p>Here’s how it works:</p>
+      <ol>
+        <li>We look at which chunks of context were retrieved from the vector store.</li>
+        <li>We check if the answer from LangChain uses information from multiple chunks.</li>
+        <li>If so, we highlight the potential mixed context and warn the user.</li>
+      </ol>
+    </section>
+    <section>
+      <h2>How to use it</h2>
+      <p>If you’re using <a href="https://promptdebugger.com" target="_blank" rel="noopener noreferrer">PromptDebugger</a>, just enable the “Mixed Context Detection” toggle and it will automatically flag these cases during evaluation.</p>
+      <p>This works with any LangChain app using a vector store + retrieval chain.</p>
+    </section>
+    <section>
+      <h2>Why this matters</h2>
+      <p>Mixing contexts is one of the main causes of hallucinations in retrieval-augmented generation (RAG).</p>
+      <p>By automatically detecting and flagging these issues, you can quickly iterate and improve the quality of your RAG system.</p>
+      <p>Try it out and let us know what you think!</p>
+    </section>
+    <footer>
+      <p><em>— The PromptDebugger Team</em></p>
+    </footer>
+  </article>
+</body>
+</html>
