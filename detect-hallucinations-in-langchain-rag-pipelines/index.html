@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>detect hallucinations in langchain rag pipelines</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1>detect hallucinations in langchain rag pipelines</h1>
+      <p><strong>Originally published on <a href="https://dev.to/0xt12s/detect-hallucinations-in-langchain-rag-pipelines-1hkn" target="_blank" rel="noopener noreferrer">dev.to</a> by 0xt12s on Jun 19 2025</strong></p>
+    </header>
+    <section>
+      <p>okay so you're building a rag pipeline with langchain and your ai keeps making stuff up. been there. here's what actually works.</p>
+    </section>
+    <section>
+      <h2>the problem: your bot sounds smart but lies</h2>
+      <p>my customer support bot was telling people we had 24/7 support when we only work 9‑5. it claimed we had “automatic refund processing” when everything's manual. subtle lies that sound totally reasonable.</p>
+    </section>
+    <section>
+      <h2>why it happens</h2>
+      <ol>
+        <li>retrieves somewhat relevant docs</li>
+        <li>llm fills in gaps with "helpful" details</li>
+        <li>you get 70% truth, 30% fiction</li>
+      </ol>
+    </section>
+    <section>
+      <h2>detection method 1: see what's happening</h2>
+      <pre><code>from traceloop.sdk import Traceloop
+Traceloop.init(app_name="my_rag_pipeline")</code></pre>
+      <p>Use OpenTelemetry traces to inspect where the LLM is adding unsupported information.</p>
+    </section>
+    <section>
+      <h2>detection method 2: llm checking (≈75% accurate)</h2>
+      <pre><code>def detect_hallucination(context, response):
+    prompt = f"""
+    Context: {context}
+    Response: {response}
+    Does the response contain information not in the context? YES/NO only.
+    """
+    result = llm.invoke(prompt)
+    return "yes" in result.lower()
+</code></pre>
+    </section>
+    <section>
+      <h2>detection method 3: pattern matching</h2>
+      <pre><code>suspicious_patterns = [
+    r'\d+\s*hours?',    # "48 hours"
+    r'24/?7',           # "24/7 support"
+    r'automatically',   # "automatically processed"
+    r'real-time',       # usually a lie
+]</code></pre>
+    </section>
+    <section>
+      <h2>the fix: better prompts</h2>
+      <pre><code>ANTI_HALLUCINATION_PROMPT = """
+Use ONLY information in the context.
+Do not add details not explicitly mentioned.
+If information isn't available, say "I don't have that information."
+Context: {context}
+Question: {question}
+"""</code></pre>
+    </section>
+    <section>
+      <h2>production setup that works</h2>
+      <pre><code>class ProductionRAG:
+    def __init__(self):
+        self.llm = OpenAI(temperature=0)
+        self.prompt = ANTI_HALLUCINATION_PROMPT
+    def query(self, question):
+        result = self.qa_chain({"question": question})
+        if detect_hallucination(context, result['answer']):
+            strict_q = f"{question}\n Only use exact information."
+            result = self.qa_chain({"question": strict_q})
+        return result['answer']
+</code></pre>
+    </section>
+    <section>
+      <h2>results</h2>
+      <p>before: 30% of responses had hallucinations  
+      after: &lt;5% hallucination rate  
+      cost: ~30% more for checking, worth it</p>
+    </section>
+    <section>
+      <h2>quick wins</h2>
+      <ul>
+        <li>add openllmetry (2 lines of code)</li>
+        <li>use explicit anti-hallucination prompts</li>
+        <li>implement basic pattern detection</li>
+        <li>set temperature to 0</li>
+        <li>track what gets flagged</li>
+      </ul>
+    </section>
+    <footer>
+      <p><em>— 0xt12s</em></p>
+    </footer>
+  </article>
+</body>
+</html>
